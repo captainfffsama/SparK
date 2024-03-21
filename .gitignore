@@ -1,3 +1,6 @@
+.vscode/
+.history/
+**/your_exp_dir/
 *.swp
 **/__pycache__/**
 .idea/*
@@ -5,3 +8,4 @@ ckpt/
 *.pth
 *.log
 *.txt
+**/viz_imgs/**

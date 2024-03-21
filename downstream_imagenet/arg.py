@@ -16,7 +16,7 @@ HP_DEFAULT_VALUES = {
     'convnext_base':      (4096, 400, 20, 'adam', 0.0001,  0.7, 0.01, 0.8, 3, 0.4,  0.9999),
     'convnext_large':     (4096, 200, 10, 'adam', 0.0001,  0.7, 0.02, 0.8, 3, 0.5,  0.9999),
     'convnext_large_384': (1024, 200, 20, 'adam', 0.00006, 0.7, 0.01, 0.8, 3, 0.5,  0.99995),
-    
+
     'resnet50':           (2048, 300, 5,  'lamb', 0.002,   0.7, 0.02, 0.1, 0, 0.05, 0.9999),
     'resnet101':          (2048, 300, 5,  'lamb', 0.001,   0.8, 0.02, 0.1, 0, 0.2,  0.9999),
     'resnet152':          (2048, 300, 5,  'lamb', 0.001,   0.8, 0.02, 0.1, 0, 0.2,  0.9999),
@@ -31,32 +31,32 @@ class FineTuneArgs(Tap):
     data_path: str
     model: str
     resume_from: str = ''   # resume from some checkpoint.pth
-    
+
     img_size: int = 224
     dataloader_workers: int = 8
-    
+
     # ImageNet classification fine-tuning hyperparameters; see `HP_DEFAULT_VALUES` above for detailed default values
     # - batch size, epoch
     bs: int = 0             # global batch size (== batch_size_per_gpu * num_gpus)
     ep: int = 0             # number of epochs
     wp_ep: int = 0          # epochs for warmup
-    
+
     # - optimization
     opt: str = ''           # optimizer; 'adam' or 'lamb'
     base_lr: float = 0.     # lr == base_lr * (bs)
     lr_scale: float = 0.    # see file `lr_decay.py` for more details
     clip: int = -1          # use gradient clipping if clip > 0
-    
+
     # - regularization tricks
     wd: float = 0.          # weight decay
     mixup: float = 0.       # use mixup if mixup > 0
     rep_aug: int = 0        # use repeated augmentation if rep_aug > 0
     drop_path: float = 0.   # drop_path ratio
-    
+
     # - other tricks
     ema: float = 0.         # use EMA if ema > 0
     sbn: bool = True        # use SyncBatchNorm
-    
+
     # NO NEED TO SPECIFIED; each of these args would be updated in runtime automatically
     lr: float = None
     batch_size_per_gpu: int = 0
@@ -72,7 +72,7 @@ class FineTuneArgs(Tap):
     commit_msg: str = os.popen(f'git log -1').read().strip().splitlines()[-1].strip()
     log_txt_name: str = '{args.exp_dir}/pretrain_log.txt'
     tb_lg_dir: str = ''     # tensorboard log directory
-    
+
     train_loss: float = 0.
     train_acc: float = 0.
     best_val_acc: float = 0.
@@ -80,11 +80,11 @@ class FineTuneArgs(Tap):
     remain_time: str = ''
     finish_time: str = ''
     first_logging: bool = True
-    
+
     def log_epoch(self):
         if not self.is_local_master:
             return
-        
+
         if self.first_logging:
             self.first_logging = False
             with open(self.log_txt_name, 'w') as fp:
@@ -93,7 +93,7 @@ class FineTuneArgs(Tap):
                     'model': self.model,
                 }, fp)
                 fp.write('\n\n')
-        
+
         with open(self.log_txt_name, 'a') as fp:
             json.dump({
                 'cur_ep': self.cur_ep,
@@ -112,11 +112,11 @@ def get_args(world_size, global_rank, local_rank, device) -> FineTuneArgs:
     args.exp_dir = os.path.join(d_name, b_name)
     os.makedirs(args.exp_dir, exist_ok=True)
     args.log_txt_name = os.path.join(args.exp_dir, 'finetune_log.txt')
-    
+
     args.tb_lg_dir = args.tb_lg_dir or os.path.join(args.exp_dir, 'tensorboard_log')
     try: os.makedirs(args.tb_lg_dir, exist_ok=True)
     except: pass
-    
+
     # fill in args.bs, args.ep, etc. with their default values (if their values are not explicitly specified, i.e., if bool(they) == False)
     if args.model == 'convnext_large' and args.img_size == 384:
         default_values = HP_DEFAULT_VALUES['convnext_large_384']
@@ -125,7 +125,7 @@ def get_args(world_size, global_rank, local_rank, device) -> FineTuneArgs:
     for k, v in zip(HP_DEFAULT_NAMES, default_values):
         if bool(getattr(args, k)) == False:
             setattr(args, k, v)
-    
+
     # update other runtime args
     args.world_size, args.global_rank, args.local_rank, args.device = world_size, global_rank, local_rank, device
     args.is_master = global_rank == 0
@@ -133,5 +133,5 @@ def get_args(world_size, global_rank, local_rank, device) -> FineTuneArgs:
     args.batch_size_per_gpu = args.bs // world_size
     args.glb_batch_size = args.batch_size_per_gpu * world_size
     args.lr = args.base_lr * args.glb_batch_size / 256
-    
+
     return args
