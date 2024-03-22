@@ -13,6 +13,7 @@ from timm.models.layers import drop
 from models.convnext import ConvNeXt
 from models.resnet import ResNet
 from models.custom import YourConvNet
+from models.yolov8 import yolov8
 _import_resnets_for_timm_registration = (ResNet,)
 
 
@@ -40,6 +41,11 @@ pretrain_default_model_kwargs = {
     'convnext_small': dict(sparse=True, drop_path_rate=0.2),
     'convnext_base': dict(sparse=True, drop_path_rate=0.3),
     'convnext_large': dict(sparse=True, drop_path_rate=0.4),
+    'yolov8n': dict(),
+    'yolov8s': dict(),
+    'yolov8m': dict(),
+    'yolov8l': dict(),
+    'yolov8x': dict(),
 }
 for kw in pretrain_default_model_kwargs.values():
     kw['pretrained'] = False
@@ -49,12 +55,12 @@ for kw in pretrain_default_model_kwargs.values():
 
 def build_sparse_encoder(name: str, input_size: int, sbn=False, drop_path_rate=0.0, verbose=False):
     from encoder import SparseEncoder
-    
+
     kwargs = pretrain_default_model_kwargs[name]
     if drop_path_rate != 0:
         kwargs['drop_path_rate'] = drop_path_rate
     print(f'[build_sparse_encoder] model kwargs={kwargs}')
     cnn = create_model(name, **kwargs)
-    
+
     return SparseEncoder(cnn, input_size=input_size, sbn=sbn, verbose=verbose)
 

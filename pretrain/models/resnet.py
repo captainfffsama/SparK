@@ -30,7 +30,7 @@ def forward(self, x, hierarchical=False):
     x = self.bn1(x)
     x = self.act1(x)
     x = self.maxpool(x)
-    
+
     if hierarchical:
         ls = []
         x = self.layer1(x); ls.append(x)
@@ -40,6 +40,7 @@ def forward(self, x, hierarchical=False):
         return ls
     else:
         x = self.global_pool(x)
+        print(self.training)
         if self.drop_rate:
             x = F.dropout(x, p=float(self.drop_rate), training=self.training)
         x = self.fc(x)
@@ -57,7 +58,7 @@ def convnet_test():
     cnn = create_model('resnet50')
     print('get_downsample_ratio:', cnn.get_downsample_ratio())
     print('get_feature_map_channels:', cnn.get_feature_map_channels())
-    
+
     downsample_ratio = cnn.get_downsample_ratio()
     feature_map_channels = cnn.get_feature_map_channels()
 
